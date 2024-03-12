@@ -1,13 +1,13 @@
 #[cfg(test)]
 mod tests {
     use rust_foxbit_api::{
-        new_hello_crate,
+        new,
         types::{Category, Currency, DepositInfo, WithdrawInfo},
     };
 
     #[tokio::test]
     async fn test_list_currencies() {
-        let foxbit = new_hello_crate();
+        let foxbit = new();
         let currency = Currency {
             symbol: Some("btc".into()),
             name: Some("Bitcoin".into()),

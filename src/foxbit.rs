@@ -2,19 +2,11 @@ use crate::types::Currency;
 use dotenv::dotenv;
 use std::env;
 
-pub struct Foxbit {
-    base_url: String,
-    api_key: String,
-    access_key: String,
-}
+pub struct Foxbit {}
 
 impl Foxbit {
-    pub fn new(base_url: String, api_key: String, access_key: String) -> Self {
-        Foxbit {
-            base_url,
-            api_key,
-            access_key,
-        }
+    pub fn new() -> Self {
+        Foxbit {}
     }
 
     pub async fn list_currencies(&self) -> Result<Vec<Currency>, serde_json::Error> {
