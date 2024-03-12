@@ -1,21 +1,29 @@
-use crate::types::Currency;
+use crate::{api::Api, types::Currency};
 use dotenv::dotenv;
+use reqwest::Client;
 use std::env;
 
-pub struct Foxbit {}
+pub struct Foxbit {
+    http_client: Client,
+    api_url: String,
+}
 
 impl Foxbit {
-    pub fn new() -> Self {
-        Foxbit {}
+    pub fn new(http_client: Client, api_url: String) -> Self {
+        Foxbit {
+            http_client,
+            api_url,
+        }
     }
 
     pub async fn list_currencies(&self) -> Result<Vec<Currency>, serde_json::Error> {
         dotenv().ok();
         let api_secret = env::var("API_SECRET").expect("API secret not found");
         let access_key = env::var("ACCESS_KEY").expect("Access key not found");
-        let api_url = env::var("FOXBIT_V3_API").expect("API URL not found");
 
-        let currencies = crate::api::list_currencies(&api_url, &api_secret, &access_key).await;
+        let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
+
+        let currencies = api.list_currencies().await;
         currencies
     }
 }
