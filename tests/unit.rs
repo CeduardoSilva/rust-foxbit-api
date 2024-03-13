@@ -33,7 +33,7 @@ mod tests {
         assert!(result.is_ok());
 
         let currencies = result.unwrap();
-        assert_eq!(currencies.len(), 1); // or however many you mocked
+        assert_eq!(currencies.len(), 1);
         assert_eq!(currencies[0].symbol, Some("BTC".to_string()));
     }
 }
