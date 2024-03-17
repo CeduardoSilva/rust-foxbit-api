@@ -34,20 +34,7 @@ impl Api<'_> {
         let endpoint = "/currencies";
         let url = format!("{}{}", &self.base_url, endpoint);
         let headers = self.get_headers(endpoint);
-
-        let response = match self.client.get(&url).headers(headers).send().await {
-            Ok(resp) => match resp.text().await {
-                Ok(text_response) => text_response,
-                Err(e) => {
-                    eprintln!("Converting Foxbit to text failed: {}", e);
-                    e.to_string()
-                }
-            },
-            Err(e) => {
-                eprintln!("Request to Foxbit failed: {}", e);
-                e.to_string()
-            }
-        };
+        let response = self.send_get_request(&url, headers).await;
 
         let json_response = serde_json::from_str::<FoxBitResponse<Vec<Currency>>>(&response);
         match json_response {
@@ -63,20 +50,7 @@ impl Api<'_> {
         let endpoint = "/markets";
         let url = format!("{}{}", &self.base_url, endpoint);
         let headers = self.get_headers(endpoint);
-
-        let response = match self.client.get(&url).headers(headers).send().await {
-            Ok(resp) => match resp.text().await {
-                Ok(text_response) => text_response,
-                Err(e) => {
-                    eprintln!("Converting Foxbit to text failed: {}", e);
-                    e.to_string()
-                }
-            },
-            Err(e) => {
-                eprintln!("Request to Foxbit failed: {}", e);
-                e.to_string()
-            }
-        };
+        let response = self.send_get_request(&url, headers).await;
 
         let json_response = serde_json::from_str::<FoxBitResponse<Vec<Market>>>(&response);
         match json_response {
@@ -106,5 +80,21 @@ impl Api<'_> {
             HeaderValue::from_str(&signature).unwrap(),
         );
         headers
+    }
+
+    async fn send_get_request(&self, url: &str, headers: HeaderMap) -> String {
+        match self.client.get(url).headers(headers).send().await {
+            Ok(resp) => match resp.text().await {
+                Ok(text_response) => text_response,
+                Err(e) => {
+                    eprintln!("Converting Foxbit to text failed: {}", e);
+                    e.to_string()
+                }
+            },
+            Err(e) => {
+                eprintln!("Request to Foxbit failed: {}", e);
+                e.to_string()
+            }
+        }
     }
 }
