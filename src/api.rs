@@ -1,4 +1,7 @@
-use reqwest::{header::HeaderValue, Client};
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    Client,
+};
 
 use crate::{
     helpers::{create_signature, get_prehash, get_timestamp},
@@ -28,24 +31,9 @@ impl Api<'_> {
     }
 
     pub async fn list_currencies(&self) -> Result<Vec<Currency>, serde_json::Error> {
-        let timestamp = get_timestamp();
-        let prehash = get_prehash("/currencies", &timestamp);
-        let signature = create_signature(&prehash, &self.api_secret);
-        let url = format!("{}/currencies", &self.base_url);
-
-        let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "X-FB-ACCESS-KEY",
-            reqwest::header::HeaderValue::from_str(&self.access_key).unwrap(),
-        );
-        headers.insert(
-            "X-FB-ACCESS-TIMESTAMP",
-            HeaderValue::from_str(&timestamp).unwrap(),
-        );
-        headers.insert(
-            "X-FB-ACCESS-SIGNATURE",
-            HeaderValue::from_str(&signature).unwrap(),
-        );
+        let endpoint = "/currencies";
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let headers = self.get_headers(endpoint);
 
         let response = match self.client.get(&url).headers(headers).send().await {
             Ok(resp) => match resp.text().await {
@@ -69,5 +57,25 @@ impl Api<'_> {
                 Err(e)
             }
         }
+    }
+
+    fn get_headers(&self, endpoint: &str) -> HeaderMap {
+        let timestamp = get_timestamp();
+        let prehash = get_prehash(endpoint, &timestamp);
+        let signature = create_signature(&prehash, &self.api_secret);
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            "X-FB-ACCESS-KEY",
+            reqwest::header::HeaderValue::from_str(&self.access_key).unwrap(),
+        );
+        headers.insert(
+            "X-FB-ACCESS-TIMESTAMP",
+            HeaderValue::from_str(&timestamp).unwrap(),
+        );
+        headers.insert(
+            "X-FB-ACCESS-SIGNATURE",
+            HeaderValue::from_str(&signature).unwrap(),
+        );
+        headers
     }
 }
