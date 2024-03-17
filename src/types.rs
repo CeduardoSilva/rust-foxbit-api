@@ -31,6 +31,6 @@ pub struct Currency {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct FoxBitResponse {
-    pub data: Vec<Currency>,
+pub struct FoxBitResponse<T> {
+    pub data: T,
 }

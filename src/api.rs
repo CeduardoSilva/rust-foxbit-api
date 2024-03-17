@@ -49,7 +49,7 @@ impl Api<'_> {
             }
         };
 
-        let json_response = serde_json::from_str::<FoxBitResponse>(&response);
+        let json_response = serde_json::from_str::<FoxBitResponse<Vec<Currency>>>(&response);
         match json_response {
             Ok(json) => Ok(json.data),
             Err(e) => {
