@@ -30,6 +30,16 @@ pub struct Currency {
     pub category: Option<Category>,
 }
 
+pub struct Market {
+    pub symbol: Option<String>,
+    pub quantity_min: Option<String>,
+    pub quantity_increment: Option<String>,
+    pub price_min: Option<String>,
+    pub price_increment: Option<String>,
+    pub base: Currency,
+    pub quote: Currency,
+}
+
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct FoxBitResponse<T> {
     pub data: T,
