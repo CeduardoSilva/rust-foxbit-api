@@ -20,3 +20,7 @@ pub fn get_timestamp() -> String {
         Err(_) => panic!("SystemTime before UNIX EPOCH"),
     }
 }
+
+pub fn get_prehash(endpoint: &str, timestamp: &str) -> String {
+    format!("{}{}{}{}{}", &timestamp, "GET", "/rest/v3", endpoint, "")
+}

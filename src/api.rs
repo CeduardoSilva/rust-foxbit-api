@@ -1,7 +1,7 @@
 use reqwest::{header::HeaderValue, Client};
 
 use crate::{
-    helpers::{create_signature, get_timestamp},
+    helpers::{create_signature, get_prehash, get_timestamp},
     types::{Currency, FoxBitResponse},
 };
 
@@ -29,7 +29,7 @@ impl Api<'_> {
 
     pub async fn list_currencies(&self) -> Result<Vec<Currency>, serde_json::Error> {
         let timestamp = get_timestamp();
-        let prehash = format!("{}{}{}{}", &timestamp, "GET", "/rest/v3/currencies", "");
+        let prehash = get_prehash("/currencies", &timestamp);
         let signature = create_signature(&prehash, &self.api_secret);
         let url = format!("{}/currencies", &self.base_url);
 

@@ -26,6 +26,7 @@ mod tests {
             .create();
 
         let api_url = format!("http://{}", server_address());
+        //let api_url = "https://api.foxbit.com.br/rest/v3"; // Uncomment this line to test the real Foxbit endpoint and comment the mocking.
         let client: Client = Client::new();
         let foxbit = Foxbit::new(client, api_url);
 
