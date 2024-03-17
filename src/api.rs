@@ -5,7 +5,7 @@ use reqwest::{
 
 use crate::{
     helpers::{create_signature, get_prehash, get_timestamp},
-    types::{Currency, FoxBitResponse},
+    types::{Currency, FoxBitResponse, Market},
 };
 
 pub struct Api<'a> {
@@ -50,6 +50,35 @@ impl Api<'_> {
         };
 
         let json_response = serde_json::from_str::<FoxBitResponse<Vec<Currency>>>(&response);
+        match json_response {
+            Ok(json) => Ok(json.data),
+            Err(e) => {
+                eprintln!("Conversion to json failed: {}", e);
+                Err(e)
+            }
+        }
+    }
+
+    pub async fn list_markets(&self) -> Result<Vec<Market>, serde_json::Error> {
+        let endpoint = "/markets";
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let headers = self.get_headers(endpoint);
+
+        let response = match self.client.get(&url).headers(headers).send().await {
+            Ok(resp) => match resp.text().await {
+                Ok(text_response) => text_response,
+                Err(e) => {
+                    eprintln!("Converting Foxbit to text failed: {}", e);
+                    e.to_string()
+                }
+            },
+            Err(e) => {
+                eprintln!("Request to Foxbit failed: {}", e);
+                e.to_string()
+            }
+        };
+
+        let json_response = serde_json::from_str::<FoxBitResponse<Vec<Market>>>(&response);
         match json_response {
             Ok(json) => Ok(json.data),
             Err(e) => {

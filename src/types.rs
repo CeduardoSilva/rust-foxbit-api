@@ -30,6 +30,7 @@ pub struct Currency {
     pub category: Option<Category>,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Market {
     pub symbol: Option<String>,
     pub quantity_min: Option<String>,
