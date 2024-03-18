@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use crate::{
     helpers::{create_signature, get_prehash, get_timestamp},
-    types::{Currency, FoxBitResponse, Market, Quote},
+    types::{Currency, FoxBitResponse, Market, OrderBook, Quote},
 };
 
 pub struct Api<'a> {
@@ -97,6 +97,34 @@ impl Api<'_> {
             .await;
 
         let json_response = serde_json::from_str::<Quote>(&response);
+        match json_response {
+            Ok(json) => Ok(json),
+            Err(e) => {
+                eprintln!("Conversion to json failed: {}", e);
+                Err(e)
+            }
+        }
+    }
+
+    pub async fn get_order_book(
+        &self,
+        market_symbol: &str,
+        depth: u8,
+    ) -> Result<OrderBook, serde_json::Error> {
+        let depth_str = format!("{}", depth);
+        let mut query_params: HashMap<&str, &str> = HashMap::new();
+        query_params.insert("market_symbol", market_symbol);
+        query_params.insert("depth", depth_str.as_str());
+        let query_string = self.build_query_string(&query_params);
+
+        let endpoint = format!("/markets/{}/orderbook", market_symbol);
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let headers = self.get_headers(&endpoint, Some(query_string));
+        let response = self
+            .send_get_request(&url, headers, Some(&query_params))
+            .await;
+
+        let json_response = serde_json::from_str::<OrderBook>(&response);
         match json_response {
             Ok(json) => Ok(json),
             Err(e) => {

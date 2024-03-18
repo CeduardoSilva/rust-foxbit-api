@@ -51,6 +51,13 @@ pub struct Quote {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct OrderBook {
+    pub sequence_id: u32,
+    pub bids: Vec<Vec<String>>,
+    pub asks: Vec<Vec<String>>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct FoxBitResponse<T> {
     pub data: T,
 }

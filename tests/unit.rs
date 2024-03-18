@@ -30,6 +30,7 @@ mod tests {
             .await;
 
         let api_url = mock_server.uri();
+        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
         let client: reqwest::Client = reqwest::Client::new();
         let foxbit = Foxbit::new(client, api_url);
 
@@ -83,6 +84,7 @@ mod tests {
             .await;
 
         let api_url = mock_server.uri();
+        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
         let client: reqwest::Client = reqwest::Client::new();
         let foxbit = Foxbit::new(client, api_url);
 
@@ -119,6 +121,7 @@ mod tests {
             .await;
 
         let api_url = mock_server.uri();
+        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
         let client: Client = Client::new();
         let foxbit = Foxbit::new(client, api_url);
 
@@ -131,5 +134,56 @@ mod tests {
 
         let quote = result.unwrap();
         assert_eq!(quote.market_symbol, Some("usdtbrl".into()));
+    }
+
+    #[tokio::test]
+    async fn test_get_order_book() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/markets/BTCBRL/orderbook"))
+            .and(query_param("market_symbol", "BTCBRL"))
+            .and(query_param("depth", "50"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(json!({
+                      "sequence_id": 1234567890,
+                      "bids": [
+                        [
+                          "3.00000000",
+                          "300.00000000"
+                        ],
+                        [
+                          "1.70000000",
+                          "310.00000000"
+                        ]
+                      ],
+                      "asks": [
+                        [
+                          "3.00000000",
+                          "300.00000000"
+                        ],
+                        [
+                          "2.00000000",
+                          "321.00000000"
+                        ]
+                      ]
+                    }))
+                    .insert_header("content-type", "application/json"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let api_url = mock_server.uri();
+        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        let client: Client = Client::new();
+        let foxbit = Foxbit::new(client, api_url);
+
+        let result = foxbit.get_order_book("BTCBRL", 50).await;
+
+        assert!(result.is_ok());
+
+        let orderbook = result.unwrap();
+        assert_eq!(orderbook.sequence_id, 1234567890_u32);
     }
 }
