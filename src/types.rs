@@ -42,6 +42,15 @@ pub struct Market {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Quote {
+    pub side: Option<String>,
+    pub market_symbol: Option<String>,
+    pub base_amount: Option<String>,
+    pub quote_amount: Option<String>,
+    pub price: Option<String>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct FoxBitResponse<T> {
     pub data: T,
 }

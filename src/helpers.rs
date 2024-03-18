@@ -21,6 +21,9 @@ pub fn get_timestamp() -> String {
     }
 }
 
-pub fn get_prehash(endpoint: &str, timestamp: &str) -> String {
-    format!("{}{}{}{}{}", &timestamp, "GET", "/rest/v3", endpoint, "")
+pub fn get_prehash(endpoint: &str, timestamp: &str, query_string: Option<&str>) -> String {
+    match query_string {
+        Some(qs) => format!("{}{}{}{}{}", &timestamp, "GET", "/rest/v3", endpoint, qs),
+        None => format!("{}{}{}{}{}", &timestamp, "GET", "/rest/v3", endpoint, ""),
+    }
 }

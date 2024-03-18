@@ -1,6 +1,6 @@
 use crate::{
     api::Api,
-    types::{Currency, Market},
+    types::{Currency, Market, Quote},
 };
 use dotenv::dotenv;
 use reqwest::Client;
@@ -39,5 +39,25 @@ impl Foxbit {
 
         let markets = api.list_markets().await;
         markets
+    }
+
+    pub async fn get_market_quotation(
+        &self,
+        side: &str,
+        base_currency: &str,
+        quote_currency: &str,
+        quantity: Option<&str>,
+        amount: Option<&str>,
+    ) -> Result<Quote, serde_json::Error> {
+        dotenv().ok();
+        let api_secret = env::var("API_SECRET").expect("API secret not found");
+        let access_key = env::var("ACCESS_KEY").expect("Access key not found");
+
+        let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
+
+        let quote = api
+            .get_market_quotation(side, base_currency, quote_currency, quantity, amount)
+            .await;
+        quote
     }
 }
