@@ -89,3 +89,12 @@ pub struct CurrentTime {
     pub iso: String,
     pub timestamp: u64,
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct MemberDetails {
+    pub sn: String,
+    pub email: String,
+    pub level: usize,
+    pub created_at: String,
+    pub disabled: bool,
+}

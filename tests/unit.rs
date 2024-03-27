@@ -360,4 +360,44 @@ mod tests {
         assert_eq!(current_time.iso, "2021-06-15T18:00:00.123Z");
         assert_eq!(current_time.timestamp, 1637342699407_u64);
     }
+
+    #[tokio::test]
+    async fn test_get_current_member_details() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/me"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(json!({
+                      "sn": "FRR3DTLHGJ7DPB",
+                      "email": "nakamoto.satoshi@example.com",
+                      "level": 10,
+                      "created_at": "2021-11-25T13:23:27.961Z",
+                      "disabled": false
+                    }))
+                    .insert_header("content-type", "application/json"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let api_url = mock_server.uri();
+        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        let client: Client = Client::new();
+        let foxbit = Foxbit::new(client, api_url);
+
+        let result = foxbit.get_current_member_details().await;
+
+        assert!(result.is_ok());
+
+        let current_member_details = result.unwrap();
+        assert_eq!(current_member_details.sn, "FRR3DTLHGJ7DPB");
+        assert_eq!(current_member_details.email, "nakamoto.satoshi@example.com");
+        assert_eq!(current_member_details.level, 10);
+        assert_eq!(
+            current_member_details.created_at,
+            "2021-11-25T13:23:27.961Z"
+        );
+        assert_eq!(current_member_details.disabled, false);
+    }
 }
