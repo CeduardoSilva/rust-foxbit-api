@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use crate::{
     helpers::{create_signature, get_prehash, get_timestamp},
-    types::{Bank, Candlestick, Currency, FoxBitResponse, Market, OrderBook, Quote},
+    types::{Bank, Candlestick, Currency, CurrentTime, FoxBitResponse, Market, OrderBook, Quote},
 };
 
 pub struct Api<'a> {
@@ -200,10 +200,25 @@ impl Api<'_> {
         let headers = self.get_headers(&endpoint, None);
         let response = self.send_get_request(&url, headers, None).await;
 
-        println!("Response: {}", response);
         let json_response = serde_json::from_str::<FoxBitResponse<Vec<Bank>>>(&response);
         match json_response {
             Ok(json) => Ok(json.data),
+            Err(e) => {
+                eprintln!("Conversion to json failed: {}", e);
+                Err(e)
+            }
+        }
+    }
+
+    pub async fn get_current_time(&self) -> Result<CurrentTime, serde_json::Error> {
+        let endpoint = format!("/system/time");
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let headers = self.get_headers(&endpoint, None);
+        let response = self.send_get_request(&url, headers, None).await;
+
+        let json_response = serde_json::from_str::<CurrentTime>(&response);
+        match json_response {
+            Ok(json) => Ok(json),
             Err(e) => {
                 eprintln!("Conversion to json failed: {}", e);
                 Err(e)

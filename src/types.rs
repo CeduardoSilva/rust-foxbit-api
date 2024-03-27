@@ -83,3 +83,9 @@ pub struct Bank {
     pub name: String,
     pub code: usize,
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct CurrentTime {
+    pub iso: String,
+    pub timestamp: u64,
+}

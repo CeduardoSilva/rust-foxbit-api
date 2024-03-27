@@ -1,6 +1,6 @@
 use crate::{
     api::Api,
-    types::{Bank, Candlestick, Currency, Market, OrderBook, Quote},
+    types::{Bank, Candlestick, Currency, CurrentTime, Market, OrderBook, Quote},
 };
 use dotenv::dotenv;
 use reqwest::Client;
@@ -119,5 +119,15 @@ impl Foxbit {
         let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
         let banks = api.list_banks().await;
         banks
+    }
+
+    pub async fn get_current_time(&self) -> Result<CurrentTime, serde_json::Error> {
+        dotenv().ok();
+        let api_secret = env::var("API_SECRET").expect("API secret not found");
+        let access_key = env::var("ACCESS_KEY").expect("Access key not found");
+
+        let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
+        let current_time = api.get_current_time().await;
+        current_time
     }
 }

@@ -329,4 +329,35 @@ mod tests {
         let banks = result.unwrap();
         assert_eq!(banks.len(), 1);
     }
+
+    #[tokio::test]
+    async fn test_get_current_time() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/system/time"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(json!({
+                      "iso": "2021-06-15T18:00:00.123Z",
+                      "timestamp": 1637342699407_u64
+                    }))
+                    .insert_header("content-type", "application/json"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let api_url = mock_server.uri();
+        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        let client: Client = Client::new();
+        let foxbit = Foxbit::new(client, api_url);
+
+        let result = foxbit.get_current_time().await;
+
+        assert!(result.is_ok());
+
+        let current_time = result.unwrap();
+        assert_eq!(current_time.iso, "2021-06-15T18:00:00.123Z");
+        assert_eq!(current_time.timestamp, 1637342699407_u64);
+    }
 }
