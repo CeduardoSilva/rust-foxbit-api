@@ -294,4 +294,39 @@ mod tests {
         let candlesticks = result.unwrap();
         assert_eq!(candlesticks.len(), 2);
     }
+
+    #[tokio::test]
+    async fn test_list_banks() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/banks"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(json!({
+                      "data": [
+                        {
+                          "abbreviation": "BB",
+                          "name": "Banco do Brasil",
+                          "code": 1
+                        }
+                      ]
+                    }))
+                    .insert_header("content-type", "application/json"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let api_url = mock_server.uri();
+        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        let client: Client = Client::new();
+        let foxbit = Foxbit::new(client, api_url);
+
+        let result = foxbit.list_banks().await;
+
+        assert!(result.is_ok());
+
+        let banks = result.unwrap();
+        assert_eq!(banks.len(), 1);
+    }
 }

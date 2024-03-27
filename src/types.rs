@@ -76,3 +76,10 @@ pub struct Candlestick {
     pub taker_buy_base_asset_volume: String,
     pub taker_buy_quote_asset_volume: String,
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Bank {
+    pub abbreviation: String,
+    pub name: String,
+    pub code: usize,
+}

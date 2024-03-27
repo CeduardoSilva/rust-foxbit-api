@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use crate::{
     helpers::{create_signature, get_prehash, get_timestamp},
-    types::{Candlestick, Currency, FoxBitResponse, Market, OrderBook, Quote},
+    types::{Bank, Candlestick, Currency, FoxBitResponse, Market, OrderBook, Quote},
 };
 
 pub struct Api<'a> {
@@ -187,6 +187,23 @@ impl Api<'_> {
         let json_response = serde_json::from_str::<Vec<Candlestick>>(&response);
         match json_response {
             Ok(json) => Ok(json),
+            Err(e) => {
+                eprintln!("Conversion to json failed: {}", e);
+                Err(e)
+            }
+        }
+    }
+
+    pub async fn list_banks(&self) -> Result<Vec<Bank>, serde_json::Error> {
+        let endpoint = format!("/banks");
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let headers = self.get_headers(&endpoint, None);
+        let response = self.send_get_request(&url, headers, None).await;
+
+        println!("Response: {}", response);
+        let json_response = serde_json::from_str::<FoxBitResponse<Vec<Bank>>>(&response);
+        match json_response {
+            Ok(json) => Ok(json.data),
             Err(e) => {
                 eprintln!("Conversion to json failed: {}", e);
                 Err(e)
