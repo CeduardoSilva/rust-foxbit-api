@@ -1,6 +1,6 @@
 use crate::{
     api::Api,
-    types::{Currency, Market, OrderBook, Quote},
+    types::{Candlestick, Currency, Market, OrderBook, Quote},
 };
 use dotenv::dotenv;
 use reqwest::Client;
@@ -91,5 +91,23 @@ impl Foxbit {
             .get_candles(market_symbol, interval, start_time, end_time)
             .await;
         candles
+    }
+
+    pub async fn get_candlesticks(
+        &self,
+        market_symbol: &str,
+        interval: &str,
+        start_time: &str,
+        end_time: &str,
+    ) -> Result<Vec<Candlestick>, serde_json::Error> {
+        dotenv().ok();
+        let api_secret = env::var("API_SECRET").expect("API secret not found");
+        let access_key = env::var("ACCESS_KEY").expect("Access key not found");
+
+        let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
+        let candlesticks = api
+            .get_candlesticks(market_symbol, interval, start_time, end_time)
+            .await;
+        candlesticks
     }
 }

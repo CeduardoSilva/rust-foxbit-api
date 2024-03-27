@@ -235,4 +235,63 @@ mod tests {
         let candles = result.unwrap();
         assert_eq!(candles.len(), 2);
     }
+
+    #[tokio::test]
+    async fn test_get_candlesticks() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/markets/BTCBRL/candlesticks"))
+            .and(query_param("interval", "1d"))
+            .and(query_param("start_time", "2022-07-18T00:00"))
+            .and(query_param("end_time", "2022-08-19T12:00"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(json!([
+                        [
+                            "1692918000000",
+                            "127772.05150000",
+                            "128467.99980000",
+                            "127750.01000000",
+                            "128353.99990000",
+                            "1692918060000",
+                            "0.17080431",
+                            "21866.35948786",
+                            66,
+                            "0.12073605",
+                            "15466.34096391"
+                        ],
+                        [
+                            "1692921600000",
+                            "128353.99990000",
+                            "128353.99990000",
+                            "127922.00030000",
+                            "128339.99990000",
+                            "1692921660000",
+                            "0.12355465",
+                            "15851.30631056",
+                            45,
+                            "0.11030870",
+                            "14156.75206627"
+                        ]
+                    ]))
+                    .insert_header("content-type", "application/json"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let api_url = mock_server.uri();
+        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        let client: Client = Client::new();
+        let foxbit = Foxbit::new(client, api_url);
+
+        let result = foxbit
+            .get_candlesticks("BTCBRL", "1d", "2022-07-18T00:00", "2022-08-19T12:00")
+            .await;
+
+        assert!(result.is_ok());
+
+        let candlesticks = result.unwrap();
+        assert_eq!(candlesticks.len(), 2);
+    }
 }

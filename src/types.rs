@@ -61,3 +61,18 @@ pub struct OrderBook {
 pub struct FoxBitResponse<T> {
     pub data: T,
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Candlestick {
+    pub open_time: String,
+    pub open_price: String,
+    pub high_price: String,
+    pub low_price: String,
+    pub close_price: String,
+    pub close_time: String,
+    pub volume: String,
+    pub quote_asset_volume: String,
+    pub number_of_trades: i32,
+    pub taker_buy_base_asset_volume: String,
+    pub taker_buy_quote_asset_volume: String,
+}
