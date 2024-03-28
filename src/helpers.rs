@@ -1,5 +1,6 @@
 use hex;
 use hmac::{Hmac, Mac};
+use serde::Serialize;
 use sha2::Sha256;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -21,9 +22,26 @@ pub fn get_timestamp() -> String {
     }
 }
 
-pub fn get_prehash(endpoint: &str, timestamp: &str, query_string: Option<&str>) -> String {
-    match query_string {
-        Some(qs) => format!("{}{}{}{}{}", &timestamp, "GET", "/rest/v3", endpoint, qs),
-        None => format!("{}{}{}{}{}", &timestamp, "GET", "/rest/v3", endpoint, ""),
+pub fn get_prehash<B: Serialize>(
+    endpoint: &str,
+    timestamp: &str,
+    query_string: Option<&str>,
+    body: Option<&B>,
+) -> String {
+    let mut method = "GET";
+    let qs = match query_string {
+        Some(qs) => qs,
+        None => "",
+    };
+    let b = match body {
+        Some(b) => serde_json::to_string(b).unwrap(),
+        None => "".into(),
+    };
+    if b != "" {
+        method = "POST";
     }
+    format!(
+        "{}{}{}{}{}{}",
+        &timestamp, method, "/rest/v3", endpoint, qs, b
+    )
 }
