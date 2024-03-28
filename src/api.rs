@@ -3,14 +3,15 @@ use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client,
 };
-use serde::de::Error;
+use serde::{de::Error, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::{
     helpers::{create_signature, get_prehash, get_timestamp},
     types::{
-        Bank, Candlestick, Currency, CurrentTime, FoxBitResponse, Market, MemberDetails, OrderBook,
-        Quote,
+        Bank, Candlestick, CreateOrderResponse, Currency, CurrentTime, FoxBitResponse, Market,
+        MemberDetails, OrderBook, Quote,
     },
 };
 
@@ -39,7 +40,7 @@ impl Api<'_> {
     pub async fn list_currencies(&self) -> Result<Vec<Currency>, serde_json::Error> {
         let endpoint = "/currencies";
         let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(endpoint, None);
+        let headers = self.get_headers(endpoint, None, None);
         let response = self.send_get_request(&url, headers, None).await;
 
         let json_response = serde_json::from_str::<FoxBitResponse<Vec<Currency>>>(&response);
@@ -55,7 +56,7 @@ impl Api<'_> {
     pub async fn list_markets(&self) -> Result<Vec<Market>, serde_json::Error> {
         let endpoint = "/markets";
         let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(endpoint, None);
+        let headers = self.get_headers(endpoint, None, None);
         let response = self.send_get_request(&url, headers, None).await;
 
         let json_response = serde_json::from_str::<FoxBitResponse<Vec<Market>>>(&response);
@@ -94,7 +95,7 @@ impl Api<'_> {
         let query_string = self.build_query_string(&query_params);
         let endpoint = "/markets/quotes";
         let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(endpoint, Some(query_string));
+        let headers = self.get_headers(endpoint, Some(query_string), None);
         let response = self
             .send_get_request(&url, headers, Some(&query_params))
             .await;
@@ -122,7 +123,7 @@ impl Api<'_> {
 
         let endpoint = format!("/markets/{}/orderbook", market_symbol);
         let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(&endpoint, Some(query_string));
+        let headers = self.get_headers(&endpoint, Some(query_string), None);
         let response = self
             .send_get_request(&url, headers, Some(&query_params))
             .await;
@@ -152,7 +153,7 @@ impl Api<'_> {
 
         let endpoint = format!("/markets/{}/candles", market_symbol);
         let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(&endpoint, Some(query_string));
+        let headers = self.get_headers(&endpoint, Some(query_string), None);
         let response = self
             .send_get_request(&url, headers, Some(&query_params))
             .await;
@@ -182,7 +183,7 @@ impl Api<'_> {
 
         let endpoint = format!("/markets/{}/candlesticks", market_symbol);
         let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(&endpoint, Some(query_string));
+        let headers = self.get_headers(&endpoint, Some(query_string), None);
         let response = self
             .send_get_request(&url, headers, Some(&query_params))
             .await;
@@ -200,7 +201,7 @@ impl Api<'_> {
     pub async fn list_banks(&self) -> Result<Vec<Bank>, serde_json::Error> {
         let endpoint = format!("/banks");
         let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(&endpoint, None);
+        let headers = self.get_headers(&endpoint, None, None);
         let response = self.send_get_request(&url, headers, None).await;
 
         let json_response = serde_json::from_str::<FoxBitResponse<Vec<Bank>>>(&response);
@@ -216,7 +217,7 @@ impl Api<'_> {
     pub async fn get_current_time(&self) -> Result<CurrentTime, serde_json::Error> {
         let endpoint = format!("/system/time");
         let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(&endpoint, None);
+        let headers = self.get_headers(&endpoint, None, None);
         let response = self.send_get_request(&url, headers, None).await;
 
         let json_response = serde_json::from_str::<CurrentTime>(&response);
@@ -232,7 +233,7 @@ impl Api<'_> {
     pub async fn get_current_member_details(&self) -> Result<MemberDetails, serde_json::Error> {
         let endpoint = format!("/me");
         let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(&endpoint, None);
+        let headers = self.get_headers(&endpoint, None, None);
         let response = self.send_get_request(&url, headers, None).await;
 
         let json_response = serde_json::from_str::<MemberDetails>(&response);
@@ -245,12 +246,55 @@ impl Api<'_> {
         }
     }
 
-    fn get_headers(&self, endpoint: &str, query_string: Option<String>) -> HeaderMap {
-        let timestamp = get_timestamp();
-        let prehash = match &query_string {
-            Some(qs) => get_prehash(endpoint, &timestamp, Some(qs)),
-            None => get_prehash(endpoint, &timestamp, None),
+    pub async fn create_order(
+        &self,
+        side: &str,
+        r#type: &str,
+        market_symbol: &str,
+        quantity: &str,
+        client_order_id: Option<&str>,
+        remark: Option<&str>,
+    ) -> Result<CreateOrderResponse, serde_json::Error> {
+        let endpoint = format!("/orders");
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let body = serde_json::json!({
+            "side": side,
+            "type": r#type,
+            "market_symbol": market_symbol,
+            "quantity": quantity,
+            "client_order_id": client_order_id.unwrap(),
+            "remark": remark.unwrap(),
+        });
+        let headers = self.get_headers(&endpoint, None, Some(&body));
+
+        let response = match self.send_post_request(&url, headers, &body).await {
+            Ok(res) => res,
+            Err(e) => {
+                eprintln!("Request to Foxbit failed: {}", e);
+                e.to_string()
+            }
         };
+
+        println!("Response: {}", response);
+
+        let json_response = serde_json::from_str::<CreateOrderResponse>(&response);
+        match json_response {
+            Ok(json) => Ok(json),
+            Err(e) => {
+                eprintln!("Conversion to json failed: {}", e);
+                Err(e)
+            }
+        }
+    }
+
+    fn get_headers(
+        &self,
+        endpoint: &str,
+        query_string: Option<String>,
+        body: Option<&Value>,
+    ) -> HeaderMap {
+        let timestamp = get_timestamp();
+        let prehash = get_prehash(endpoint, &timestamp, query_string.as_deref(), body);
         let signature = create_signature(&prehash, &self.api_secret);
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -295,6 +339,25 @@ impl Api<'_> {
                 e.to_string()
             }
         }
+    }
+
+    async fn send_post_request<T: Serialize + ?Sized>(
+        &self,
+        url: &str,
+        headers: HeaderMap,
+        body: &T,
+    ) -> Result<String, reqwest::Error> {
+        let res = self
+            .client
+            .post(url)
+            .headers(headers)
+            .json(body)
+            .send()
+            .await?
+            .text()
+            .await?;
+
+        Ok(res)
     }
 
     fn build_query_string(&self, query_params: &HashMap<&str, &str>) -> String {

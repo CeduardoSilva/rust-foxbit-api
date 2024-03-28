@@ -400,4 +400,46 @@ mod tests {
         );
         assert_eq!(current_member_details.disabled, false);
     }
+
+    #[tokio::test]
+    async fn test_create_order() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("POST"))
+            .and(path("/orders"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(json!({
+                      "id": 1234567890,
+                      "sn": "OKMAKSDHRVVREK",
+                      "client_order_id": "451637946501"
+                    }))
+                    .insert_header("content-type", "application/json"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let api_url = mock_server.uri();
+        //let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        let client: Client = Client::new();
+        let foxbit = Foxbit::new(client, api_url);
+
+        let result = foxbit
+            .create_order(
+                "BUY",
+                "MARKET",
+                "btcbrl",
+                "0.42",
+                Some("123456789"),
+                Some("remark"),
+            )
+            .await;
+
+        assert!(result.is_ok());
+
+        let create_order_response = result.unwrap();
+        assert_eq!(create_order_response.id, 1234567890);
+        assert_eq!(create_order_response.sn, "OKMAKSDHRVVREK");
+        assert_eq!(create_order_response.client_order_id, "451637946501")
+    }
 }

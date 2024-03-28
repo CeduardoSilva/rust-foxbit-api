@@ -98,3 +98,10 @@ pub struct MemberDetails {
     pub created_at: String,
     pub disabled: bool,
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct CreateOrderResponse {
+    pub id: u64,
+    pub sn: String,
+    pub client_order_id: String,
+}
