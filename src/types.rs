@@ -105,3 +105,24 @@ pub struct CreateOrderResponse {
     pub sn: String,
     pub client_order_id: String,
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Order {
+    pub id: String,
+    pub sn: String,
+    pub market_symbol: String,
+    pub client_order_id: String,
+    pub side: String,
+    pub r#type: String,
+    pub state: String,
+    pub price: String,
+    pub price_avg: String,
+    pub quantity: String,
+    pub quantity_executed: String,
+    pub instant_amount: String,
+    pub instant_amount_executed: String,
+    pub created_at: String,
+    pub trades_count: String,
+    pub remark: String,
+    pub funds_received: String,
+}
