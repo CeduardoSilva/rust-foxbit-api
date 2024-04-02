@@ -339,6 +339,25 @@ impl Api<'_> {
         }
     }
 
+    pub async fn get_order_by_client_id(
+        &self,
+        client_order_id: &str,
+    ) -> Result<Order, serde_json::Error> {
+        let endpoint = format!("/orders/by-client-order-id/{}", client_order_id);
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let headers = self.get_headers(&endpoint, None, None);
+        let response = self.send_get_request(&url, headers, None).await;
+
+        let json_response = serde_json::from_str::<Order>(&response);
+        match json_response {
+            Ok(json) => Ok(json),
+            Err(e) => {
+                eprintln!("Conversion to json failed: {}", e);
+                Err(e)
+            }
+        }
+    }
+
     fn get_headers(
         &self,
         endpoint: &str,

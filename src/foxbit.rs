@@ -206,7 +206,20 @@ impl Foxbit {
         let access_key = env::var("ACCESS_KEY").expect("Access key not found");
 
         let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
-        let orders = api.get_order_by_id(order_id).await;
-        orders
+        let order = api.get_order_by_id(order_id).await;
+        order
+    }
+
+    pub async fn get_order_by_client_id(
+        &self,
+        client_order_id: &str,
+    ) -> Result<Order, serde_json::Error> {
+        dotenv().ok();
+        let api_secret = env::var("API_SECRET").expect("API secret not found");
+        let access_key = env::var("ACCESS_KEY").expect("Access key not found");
+
+        let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
+        let order = api.get_order_by_client_id(client_order_id).await;
+        order
     }
 }

@@ -546,4 +546,49 @@ mod tests {
         let order = result.unwrap();
         assert_eq!(order.id, "1234567890");
     }
+
+    #[tokio::test]
+    async fn test_get_order_by_client_id() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/orders/by-client-order-id/451637946501"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(json!({
+                      "id": "1234567890",
+                      "sn": "OKMAKSDHRVVREK",
+                      "client_order_id": "451637946501",
+                      "market_symbol": "btcbrl",
+                      "side": "BUY",
+                      "type": "LIMIT",
+                      "state": "ACTIVE",
+                      "price": "290000.0",
+                      "price_avg": "295333.3333",
+                      "quantity": "0.42",
+                      "quantity_executed": "0.41",
+                      "instant_amount": "290.0",
+                      "instant_amount_executed": "290.0",
+                      "created_at": "2021-02-15T22:06:32.999Z",
+                      "trades_count": "2",
+                      "remark": "A remarkable note for the order.",
+                      "funds_received": "290.0"
+                    }))
+                    .insert_header("content-type", "application/json"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let api_url = mock_server.uri();
+        //let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        let client: Client = Client::new();
+        let foxbit = Foxbit::new(client, api_url);
+
+        let result = foxbit.get_order_by_client_id("451637946501").await;
+
+        assert!(result.is_ok());
+
+        let order = result.unwrap();
+        assert_eq!(order.client_order_id, "451637946501");
+    }
 }

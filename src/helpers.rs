@@ -33,7 +33,6 @@ pub fn get_prehash<B: Serialize>(
         Some(qs) => qs,
         None => "",
     };
-    println!("qs: {:?}", qs);
     let b = match body {
         Some(b) => serde_json::to_string(b).unwrap(),
         None => "".into(),
