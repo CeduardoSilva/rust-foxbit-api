@@ -275,8 +275,6 @@ impl Api<'_> {
             }
         };
 
-        println!("Response: {}", response);
-
         let json_response = serde_json::from_str::<CreateOrderResponse>(&response);
         match json_response {
             Ok(json) => Ok(json),
@@ -315,10 +313,25 @@ impl Api<'_> {
             .send_get_request(&url, headers, Some(&query_params))
             .await;
 
-        println!("Response: {}", response);
         let json_response = serde_json::from_str::<FoxBitResponse<Vec<Order>>>(&response);
         match json_response {
             Ok(json) => Ok(json.data),
+            Err(e) => {
+                eprintln!("Conversion to json failed: {}", e);
+                Err(e)
+            }
+        }
+    }
+
+    pub async fn get_order_by_id(&self, order_id: &str) -> Result<Order, serde_json::Error> {
+        let endpoint = format!("/orders/by-order-id/{}", order_id);
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let headers = self.get_headers(&endpoint, None, None);
+        let response = self.send_get_request(&url, headers, None).await;
+
+        let json_response = serde_json::from_str::<Order>(&response);
+        match json_response {
+            Ok(json) => Ok(json),
             Err(e) => {
                 eprintln!("Conversion to json failed: {}", e);
                 Err(e)
