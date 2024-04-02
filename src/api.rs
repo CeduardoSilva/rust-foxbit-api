@@ -10,8 +10,8 @@ use std::collections::HashMap;
 use crate::{
     helpers::{create_signature, get_prehash, get_timestamp},
     types::{
-        Bank, Candlestick, CreateOrderResponse, Currency, CurrentTime, FoxBitResponse, Market,
-        MemberDetails, Order, OrderBook, Quote,
+        Bank, CancelOrderResponse, Candlestick, CreateOrderResponse, Currency, CurrentTime,
+        FoxBitResponse, Market, MemberDetails, Order, OrderBook, Quote,
     },
 };
 
@@ -358,6 +358,38 @@ impl Api<'_> {
         }
     }
 
+    pub async fn cancel_orders(
+        &self,
+        r#type: &str,
+    ) -> Result<Vec<CancelOrderResponse>, serde_json::Error> {
+        let endpoint = format!("/orders/cancel");
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let body = serde_json::json!({
+            "type": r#type,
+        });
+        let headers = self.get_headers(&endpoint, None, Some(&body));
+
+        let response = match self.send_put_request(&url, headers, &body).await {
+            Ok(res) => res,
+            Err(e) => {
+                eprintln!("Request to Foxbit failed: {}", e);
+                e.to_string()
+            }
+        };
+
+        println!("Response: {}", response);
+
+        let json_response =
+            serde_json::from_str::<FoxBitResponse<Vec<CancelOrderResponse>>>(&response);
+        match json_response {
+            Ok(json) => Ok(json.data),
+            Err(e) => {
+                eprintln!("Conversion to json failed: {}", e);
+                Err(e)
+            }
+        }
+    }
+
     fn get_headers(
         &self,
         endpoint: &str,
@@ -425,6 +457,25 @@ impl Api<'_> {
         let res = self
             .client
             .post(url)
+            .headers(headers)
+            .json(body)
+            .send()
+            .await?
+            .text()
+            .await?;
+
+        Ok(res)
+    }
+
+    async fn send_put_request<T: Serialize + ?Sized>(
+        &self,
+        url: &str,
+        headers: HeaderMap,
+        body: &T,
+    ) -> Result<String, reqwest::Error> {
+        let res = self
+            .client
+            .put(url)
             .headers(headers)
             .json(body)
             .send()

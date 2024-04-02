@@ -107,6 +107,12 @@ pub struct CreateOrderResponse {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct CancelOrderResponse {
+    pub id: u64,
+    pub sn: String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Order {
     pub id: String,
     pub sn: String,

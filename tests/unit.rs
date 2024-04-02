@@ -591,4 +591,38 @@ mod tests {
         let order = result.unwrap();
         assert_eq!(order.client_order_id, "451637946501");
     }
+
+    #[tokio::test]
+    async fn test_cancel_orders() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("PUT"))
+            .and(path("/orders/cancel"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(json!({
+                      "data": [
+                        {
+                          "sn": "OKMAKSDHRVVREK",
+                          "id": 123456789
+                        }
+                      ]
+                    }))
+                    .insert_header("content-type", "application/json"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let api_url = mock_server.uri();
+        //let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        let client: Client = Client::new();
+        let foxbit = Foxbit::new(client, api_url);
+
+        let result = foxbit.cancel_orders("ALL").await;
+
+        assert!(result.is_ok());
+
+        let cancel_order_response = result.unwrap();
+        assert_eq!(cancel_order_response[0].sn, "OKMAKSDHRVVREK");
+    }
 }

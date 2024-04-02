@@ -1,8 +1,8 @@
 use crate::{
     api::Api,
     types::{
-        Bank, Candlestick, CreateOrderResponse, Currency, CurrentTime, Market, MemberDetails,
-        Order, OrderBook, Quote,
+        Bank, CancelOrderResponse, Candlestick, CreateOrderResponse, Currency, CurrentTime, Market,
+        MemberDetails, Order, OrderBook, Quote,
     },
 };
 use dotenv::dotenv;
@@ -221,5 +221,18 @@ impl Foxbit {
         let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
         let order = api.get_order_by_client_id(client_order_id).await;
         order
+    }
+
+    pub async fn cancel_orders(
+        &self,
+        r#type: &str,
+    ) -> Result<Vec<CancelOrderResponse>, serde_json::Error> {
+        dotenv().ok();
+        let api_secret = env::var("API_SECRET").expect("API secret not found");
+        let access_key = env::var("ACCESS_KEY").expect("Access key not found");
+
+        let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
+        let cancel_order_response = api.cancel_orders(r#type).await;
+        cancel_order_response
     }
 }
