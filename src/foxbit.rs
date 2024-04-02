@@ -2,7 +2,7 @@ use crate::{
     api::Api,
     types::{
         Bank, Candlestick, CreateOrderResponse, Currency, CurrentTime, Market, MemberDetails,
-        OrderBook, Quote,
+        Order, OrderBook, Quote,
     },
 };
 use dotenv::dotenv;
@@ -169,5 +169,34 @@ impl Foxbit {
             )
             .await;
         response
+    }
+
+    pub async fn list_orders(
+        &self,
+        start_time: &str,
+        end_time: &str,
+        page_size: usize,
+        page: usize,
+        market_symbol: &str,
+        state: &str,
+        side: &str,
+    ) -> Result<Vec<Order>, serde_json::Error> {
+        dotenv().ok();
+        let api_secret = env::var("API_SECRET").expect("API secret not found");
+        let access_key = env::var("ACCESS_KEY").expect("Access key not found");
+
+        let api = Api::new(&self.http_client, &self.api_url, api_secret, access_key);
+        let orders = api
+            .list_orders(
+                start_time,
+                end_time,
+                page_size,
+                page,
+                market_symbol,
+                state,
+                side,
+            )
+            .await;
+        orders
     }
 }

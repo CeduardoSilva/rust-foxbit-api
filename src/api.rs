@@ -11,7 +11,7 @@ use crate::{
     helpers::{create_signature, get_prehash, get_timestamp},
     types::{
         Bank, Candlestick, CreateOrderResponse, Currency, CurrentTime, FoxBitResponse, Market,
-        MemberDetails, OrderBook, Quote,
+        MemberDetails, Order, OrderBook, Quote,
     },
 };
 
@@ -287,6 +287,45 @@ impl Api<'_> {
         }
     }
 
+    pub async fn list_orders(
+        &self,
+        start_time: &str,
+        end_time: &str,
+        page_size: usize,
+        page: usize,
+        market_symbol: &str,
+        state: &str,
+        side: &str,
+    ) -> Result<Vec<Order>, serde_json::Error> {
+        let ps = page_size.to_string();
+        let pg = page.to_string();
+        let mut query_params: HashMap<&str, &str> = HashMap::new();
+        query_params.insert("start_time", start_time);
+        query_params.insert("end_time", end_time);
+        query_params.insert("page_size", &ps);
+        query_params.insert("page", &pg);
+        query_params.insert("market_symbol", market_symbol);
+        query_params.insert("state", state);
+        query_params.insert("side", side);
+        let endpoint = format!("/orders");
+        let query_string = self.build_query_string(&query_params);
+        let url = format!("{}{}", &self.base_url, endpoint);
+        let headers = self.get_headers(&endpoint, Some(query_string), None);
+        let response = self
+            .send_get_request(&url, headers, Some(&query_params))
+            .await;
+
+        println!("Response: {}", response);
+        let json_response = serde_json::from_str::<FoxBitResponse<Vec<Order>>>(&response);
+        match json_response {
+            Ok(json) => Ok(json.data),
+            Err(e) => {
+                eprintln!("Conversion to json failed: {}", e);
+                Err(e)
+            }
+        }
+    }
+
     fn get_headers(
         &self,
         endpoint: &str,
@@ -295,6 +334,7 @@ impl Api<'_> {
     ) -> HeaderMap {
         let timestamp = get_timestamp();
         let prehash = get_prehash(endpoint, &timestamp, query_string.as_deref(), body);
+        println!("Prehash: {}", prehash);
         let signature = create_signature(&prehash, &self.api_secret);
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -326,6 +366,9 @@ impl Api<'_> {
             request_builder
         };
 
+        println!("Query params: {:?}", query_params);
+        println!("Request builder: {:?}", request_builder);
+        println!("URL: {}", url);
         match request_builder.send().await {
             Ok(resp) => match resp.text().await {
                 Ok(text_response) => text_response,

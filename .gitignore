@@ -1,2 +1,5 @@
 /target
 .env
+*.js
+package.json
+package-lock.json
