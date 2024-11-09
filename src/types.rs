@@ -132,3 +132,18 @@ pub struct Order {
     pub remark: String,
     pub funds_received: String,
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Trade {
+    pub id: u64,
+    pub sn: String,
+    pub order_id: String,
+    pub market_symbol: String,
+    pub side: String,
+    pub price: String,
+    pub quantity: String,
+    pub fee: String,
+    pub fee_currency_symbol: String,
+    pub created_at: String,
+    pub role: String,
+}

@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use reqwest::Client;
     use rust_foxbit_api::Foxbit;
     use serde_json::json;
@@ -31,7 +33,7 @@ mod tests {
 
         let api_url = mock_server.uri();
         // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
-        let client: reqwest::Client = reqwest::Client::new();
+        let client: Client = Client::new();
         let foxbit = Foxbit::new(client, api_url);
 
         let result = foxbit.list_currencies().await;
@@ -85,7 +87,7 @@ mod tests {
 
         let api_url = mock_server.uri();
         // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
-        let client: reqwest::Client = reqwest::Client::new();
+        let client: Client = Client::new();
         let foxbit = Foxbit::new(client, api_url);
 
         let result = foxbit.list_markets().await;
@@ -140,9 +142,10 @@ mod tests {
     async fn test_get_order_book() {
         let mock_server = MockServer::start().await;
 
+        // Adjust mock expectations to ensure proper matching of query parameters
         Mock::given(method("GET"))
-            .and(path("/markets/BTCBRL/orderbook"))
-            .and(query_param("market_symbol", "BTCBRL"))
+            .and(path("/markets/btcbrl/orderbook"))
+            .and(query_param("market_symbol", "btcbrl"))
             .and(query_param("depth", "50"))
             .respond_with(
                 ResponseTemplate::new(200)
@@ -175,11 +178,16 @@ mod tests {
             .await;
 
         let api_url = mock_server.uri();
-        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
         let client: Client = Client::new();
         let foxbit = Foxbit::new(client, api_url);
 
-        let result = foxbit.get_order_book("BTCBRL", 50).await;
+        // Construct the query parameters using BTreeMap for consistency
+        let mut query_params = BTreeMap::new();
+        query_params.insert("market_symbol", "btcbrl");
+        query_params.insert("depth", "50");
+
+        // Pass the query params to the Foxbit client
+        let result = foxbit.get_order_book("btcbrl", 50).await;
 
         assert!(result.is_ok());
 
@@ -192,7 +200,7 @@ mod tests {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
-            .and(path("/markets/BTCBRL/candles"))
+            .and(path("/markets/btcbrl/candles"))
             .and(query_param("interval", "1d"))
             .and(query_param("start_time", "2022-07-18T00:00"))
             .and(query_param("end_time", "2022-08-19T12:00"))
@@ -227,7 +235,7 @@ mod tests {
         let foxbit = Foxbit::new(client, api_url);
 
         let result = foxbit
-            .get_candles("BTCBRL", "1d", "2022-07-18T00:00", "2022-08-19T12:00")
+            .get_candles("btcbrl", "1d", "2022-07-18T00:00", "2022-08-19T12:00")
             .await;
 
         assert!(result.is_ok());
@@ -241,7 +249,7 @@ mod tests {
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
-            .and(path("/markets/BTCBRL/candlesticks"))
+            .and(path("/markets/btcbrl/candlesticks"))
             .and(query_param("interval", "1d"))
             .and(query_param("start_time", "2022-07-18T00:00"))
             .and(query_param("end_time", "2022-08-19T12:00"))
@@ -286,7 +294,7 @@ mod tests {
         let foxbit = Foxbit::new(client, api_url);
 
         let result = foxbit
-            .get_candlesticks("BTCBRL", "1d", "2022-07-18T00:00", "2022-08-19T12:00")
+            .get_candlesticks("btcbrl", "1d", "2022-07-18T00:00", "2022-08-19T12:00")
             .await;
 
         assert!(result.is_ok());
@@ -370,10 +378,10 @@ mod tests {
             .respond_with(
                 ResponseTemplate::new(200)
                     .set_body_json(json!({
-                      "sn": "FRR3DTLHGJ7DPB",
-                      "email": "nakamoto.satoshi@example.com",
-                      "level": 10,
-                      "created_at": "2021-11-25T13:23:27.961Z",
+                      "sn": "FTEF4ISD4SV7QB",
+                      "email": "cs.eduardo@icloud.com",
+                      "level": 30,
+                      "created_at": "2018-07-10T17:45:18.000Z",
                       "disabled": false
                     }))
                     .insert_header("content-type", "application/json"),
@@ -391,12 +399,12 @@ mod tests {
         assert!(result.is_ok());
 
         let current_member_details = result.unwrap();
-        assert_eq!(current_member_details.sn, "FRR3DTLHGJ7DPB");
-        assert_eq!(current_member_details.email, "nakamoto.satoshi@example.com");
-        assert_eq!(current_member_details.level, 10);
+        assert_eq!(current_member_details.sn, "FTEF4ISD4SV7QB");
+        assert_eq!(current_member_details.email, "cs.eduardo@icloud.com");
+        assert_eq!(current_member_details.level, 30);
         assert_eq!(
             current_member_details.created_at,
-            "2021-11-25T13:23:27.961Z"
+            "2018-07-10T17:45:18.000Z"
         );
         assert_eq!(current_member_details.disabled, false);
     }
@@ -486,12 +494,12 @@ mod tests {
 
         let result = foxbit
             .list_orders(
-                "2022-07-18T00:00",
-                "2022-08-19T12:00",
+                "2024-08-28T00:00:00.000Z",
+                "2024-08-29T20:00:22.013Z",
                 10,
                 1,
                 "btcbrl",
-                "ACTIVE",
+                "FILLED",
                 "BUY",
             )
             .await;
@@ -624,5 +632,54 @@ mod tests {
 
         let cancel_order_response = result.unwrap();
         assert_eq!(cancel_order_response[0].sn, "OKMAKSDHRVVREK");
+    }
+
+    #[tokio::test]
+    async fn test_list_trades() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/trades"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(json!({
+                      "data": [{
+                            "id": 1234567890,
+                            "sn": "TC5JZVW2LLJ3IW",
+                            "order_id": "1234567890",
+                            "market_symbol": "btcbrl",
+                            "side": "BUY",
+                            "price": "290000.0",
+                            "quantity": "1.0",
+                            "fee": "0.01",
+                            "fee_currency_symbol": "btc",
+                            "created_at": "2021-02-15T22:06:32.999Z",
+                            "role": "TAKER",
+                      }]
+                    }))
+                    .insert_header("content-type", "application/json"),
+            )
+            .mount(&mock_server)
+            .await;
+
+        let api_url = mock_server.uri();
+        //let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        let client: Client = Client::new();
+        let foxbit = Foxbit::new(client, api_url);
+
+        let result = foxbit
+            .list_trades(
+                "2024-08-28T00:00:00.000Z", //start_time
+                "2024-08-29T20:00:22.013Z", //end_time
+                10,                         //page_size
+                1,                          //page
+                "btcbrl",                   //market_symbol
+            )
+            .await;
+
+        assert!(result.is_ok());
+
+        let listed_trades = result.unwrap();
+        assert_eq!(listed_trades[0].id, 1234567890);
     }
 }
