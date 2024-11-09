@@ -8,6 +8,8 @@ mod tests {
     use wiremock::matchers::{method, path, query_param};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
+    use std::env;
+
     #[tokio::test]
     async fn test_list_currencies() {
         let mock_server = MockServer::start().await;
@@ -17,22 +19,26 @@ mod tests {
             .respond_with(
                 ResponseTemplate::new(200)
                     .set_body_json(json!({
-                        "data": [
-                            {
-                                "symbol": "BTC",
-                                "name": "Bitcoin",
-                                "type": "crypto",
-                                "precision": 8,
-                            },
-                        ]
-                    }))
+                    "data": [
+                        {
+                            "symbol": "BTC",
+                            "name": "Bitcoin",
+                            "type": "crypto",
+                            "precision": 8,
+                        },
+                    ]
+                }))
                     .insert_header("content-type", "application/json"),
             )
             .mount(&mock_server)
             .await;
 
-        let api_url = mock_server.uri();
-        // let api_url = "https://api.foxbit.com.br/rest/v3".into(); // Uncomment to test Foxbit Production.
+        // Check the environment variable
+        let api_url = match env::var("API_ENV") {
+            Ok(env) if env == "production" => "https://api.foxbit.com.br/rest/v3".to_string(),
+            _ => mock_server.uri(),
+        };
+
         let client: Client = Client::new();
         let foxbit = Foxbit::new(client, api_url);
 
@@ -40,9 +46,15 @@ mod tests {
         assert!(result.is_ok());
 
         let currencies = result.unwrap();
-        assert_eq!(currencies.len(), 1);
-        assert_eq!(currencies[0].symbol, Some("BTC".to_string()));
+        assert!(!currencies.is_empty(), "Currencies list should not be empty");
+
+        for currency in currencies {
+            assert!(currency.symbol.is_some(), "Currency symbol should be present");
+            assert!(currency.name.is_some(), "Currency name should be present");
+            assert!(currency.r#type.is_some(), "Currency type should be present");
+        }
     }
+
 
     #[tokio::test]
     async fn test_list_markets() {
