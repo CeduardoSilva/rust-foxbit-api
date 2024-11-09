@@ -28,20 +28,17 @@ pub fn get_prehash<B: Serialize>(
     query_string: Option<&str>,
     body: Option<&B>,
 ) -> String {
-    let mut method = "GET";
-    let qs = match query_string {
-        Some(qs) => qs,
-        None => "",
-    };
+    let method = if body.is_some() { "POST" } else { "GET" };
+
+    let qs = query_string.unwrap_or_else(|| "");
+
     let b = match body {
         Some(b) => serde_json::to_string(b).unwrap(),
         None => "".into(),
     };
-    if b != "" {
-        method = "POST";
-    }
+
     format!(
         "{}{}{}{}{}{}",
-        &timestamp, method, "/rest/v3", endpoint, qs, b
+        timestamp, method, "/rest/v3", endpoint, qs, b
     )
 }
