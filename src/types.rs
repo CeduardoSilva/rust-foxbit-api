@@ -53,6 +53,7 @@ pub struct Quote {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct OrderBook {
     pub sequence_id: u32,
+    pub timestamp: u64,
     pub bids: Vec<Vec<String>>,
     pub asks: Vec<Vec<String>>,
 }
@@ -117,20 +118,19 @@ pub struct Order {
     pub id: String,
     pub sn: String,
     pub market_symbol: String,
-    pub client_order_id: String,
+    pub client_order_id: Option<String>,
     pub side: String,
     pub r#type: String,
     pub state: String,
-    pub price: String,
+    pub price: Option<String>,
     pub price_avg: String,
     pub quantity: String,
     pub quantity_executed: String,
-    pub instant_amount: String,
-    pub instant_amount_executed: String,
+    pub instant_amount: Option<String>,
+    pub instant_amount_executed: Option<String>,
     pub created_at: String,
-    pub trades_count: String,
-    pub remark: String,
-    pub funds_received: String,
+    pub trades_count: i32,
+    pub cancellation_reason: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

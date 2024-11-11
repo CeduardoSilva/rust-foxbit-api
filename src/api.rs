@@ -136,7 +136,6 @@ impl Api<'_> {
     ) -> Result<OrderBook, serde_json::Error> {
         let depth_str = format!("{}", depth);
         let mut query_params: BTreeMap<&str, &str> = BTreeMap::new();
-        query_params.insert("market_symbol", market_symbol);
         query_params.insert("depth", depth_str.as_str());
         let query_string = self.build_query_string(&query_params);
 
@@ -146,37 +145,8 @@ impl Api<'_> {
         let response = self
             .send_get_request(&url, headers, Some(&query_params))
             .await;
+        println!("{:?}", response);
         let json_response = serde_json::from_str::<OrderBook>(&response);
-        match json_response {
-            Ok(json) => Ok(json),
-            Err(e) => {
-                eprintln!("Conversion to json failed: {}", e);
-                Err(e)
-            }
-        }
-    }
-
-    pub async fn get_candles(
-        &self,
-        market_symbol: &str,
-        interval: &str,
-        start_time: &str,
-        end_time: &str,
-    ) -> Result<Vec<Vec<String>>, serde_json::Error> {
-        let mut query_params: BTreeMap<&str, &str> = BTreeMap::new();
-        query_params.insert("interval", interval);
-        query_params.insert("start_time", start_time);
-        query_params.insert("end_time", end_time);
-        let query_string = self.build_query_string(&query_params);
-
-        let endpoint = format!("/markets/{}/candles", market_symbol);
-        let url = format!("{}{}", &self.base_url, endpoint);
-        let headers = self.get_headers(&endpoint, Some(query_string), None);
-        let response = self
-            .send_get_request(&url, headers, Some(&query_params))
-            .await;
-
-        let json_response = serde_json::from_str::<Vec<Vec<String>>>(&response);
         match json_response {
             Ok(json) => Ok(json),
             Err(e) => {
@@ -254,6 +224,7 @@ impl Api<'_> {
         let headers = self.get_headers(&endpoint, None, None);
         let response = self.send_get_request(&url, headers, None).await;
 
+        println!("{:?}", response);
         let json_response = serde_json::from_str::<MemberDetails>(&response);
         match json_response {
             Ok(json) => Ok(json),
